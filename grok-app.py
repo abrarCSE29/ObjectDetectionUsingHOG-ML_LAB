@@ -47,21 +47,32 @@ class HOGTransformer(BaseEstimator, TransformerMixin):
 def load_images(image_dir, target_size=(64, 64)):
     images = []
     labels = []
-    
+    valid_extensions = (".jpg", ".jpeg", ".png")  # Define valid image extensions
+
     for class_name in os.listdir(image_dir):
         class_path = os.path.join(image_dir, class_name)
         if os.path.isdir(class_path):
             for img_name in os.listdir(class_path):
                 img_path = os.path.join(class_path, img_name)
+
+                # Skip non-image files
+                if not img_name.lower().endswith(valid_extensions):
+                    print(f"Skipping non-image file: {img_path}")
+                    continue
+
                 try:
                     img = cv2.imread(img_path)
+                    if img is None:
+                        print(f"Skipping unreadable image: {img_path}")
+                        continue
+
                     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                     img = cv2.resize(img, target_size)
                     images.append(img)
                     labels.append(class_name)
                 except Exception as e:
                     print(f"Error loading image {img_path}: {e}")
-    
+
     return np.array(images), np.array(labels)
 
 def main():
@@ -70,7 +81,7 @@ def main():
     
     # 1. Load and preprocess dataset
     # Replace with your actual image directory path
-    image_dir = "path/to/your/image/dataset"
+    image_dir = "dataset"
     
     try:
         X, y = load_images(image_dir)
